@@ -1,8 +1,8 @@
 package com.blikoon.rooster;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -11,7 +11,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class ContactListActivity extends AppCompatActivity {
 
@@ -28,21 +33,26 @@ public class ContactListActivity extends AppCompatActivity {
         contactsRecyclerView = (RecyclerView) findViewById(R.id.contact_list_recycler_view);
         contactsRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
 
-        ContactModel model = ContactModel.get(getBaseContext());
-        List<Contact> contacts = model.getContacts();
+        getContacts();
+    }
 
+    private void getContacts() {
+        Roster roster = Roster.getInstanceFor(RoosterConnection.getConnection());
+        Set<RosterEntry> entries = roster.getEntries();
+        List<Contact> contacts = new ArrayList<>();
+        for (RosterEntry entry : entries) {
+            Contact contact = new Contact(entry.getJid().toString());
+            contacts.add(contact);
+        }
         mAdapter = new ContactAdapter(contacts);
         contactsRecyclerView.setAdapter(mAdapter);
     }
 
-
-
-    private class ContactHolder extends RecyclerView.ViewHolder
-    {
+    private class ContactHolder extends RecyclerView.ViewHolder {
         private TextView contactTextView;
         private Contact mContact;
-        public ContactHolder ( View itemView)
-        {
+
+        public ContactHolder(View itemView) {
             super(itemView);
 
             contactTextView = (TextView) itemView.findViewById(R.id.contact_jid);
@@ -52,8 +62,8 @@ public class ContactListActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     //Inside here we start the chat activity
                     Intent intent = new Intent(ContactListActivity.this
-                            ,ChatActivity.class);
-                    intent.putExtra("EXTRA_CONTACT_JID",mContact.getJid());
+                            , ChatActivity.class);
+                    intent.putExtra("EXTRA_CONTACT_JID", mContact.getJid());
                     startActivity(intent);
 
 
@@ -62,12 +72,10 @@ public class ContactListActivity extends AppCompatActivity {
         }
 
 
-        public void bindContact( Contact contact)
-        {
+        public void bindContact(Contact contact) {
             mContact = contact;
-            if (mContact == null)
-            {
-                Log.d(TAG,"Trying to work on a null Contact object ,returning.");
+            if (mContact == null) {
+                Log.d(TAG, "Trying to work on a null Contact object ,returning.");
                 return;
             }
             contactTextView.setText(mContact.getJid());
@@ -76,12 +84,10 @@ public class ContactListActivity extends AppCompatActivity {
     }
 
 
-    private class ContactAdapter extends RecyclerView.Adapter<ContactHolder>
-    {
+    private class ContactAdapter extends RecyclerView.Adapter<ContactHolder> {
         private List<Contact> mContacts;
 
-        public ContactAdapter( List<Contact> contactList)
-        {
+        public ContactAdapter(List<Contact> contactList) {
             mContacts = contactList;
         }
 
